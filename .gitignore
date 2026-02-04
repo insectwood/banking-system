@@ -1,0 +1,13 @@
+# IntelliJ
+.idea/
+*.iml
+*.iws
+
+# Gradle & Build
+.gradle/
+build/
+out/
+
+# Mac/Windows system files
+.DS_Store
+Thumbs.db
