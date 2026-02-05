@@ -53,4 +53,26 @@ public class AccountService {
 
         return AccountResponse.from(account);
     }
+
+    /**
+     * [Transfer Module] Deposit
+     */
+    @Transactional
+    public void deposit(String accountNumber, Long amount) {
+        Account account = accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new IllegalArgumentException("Account not found."));
+
+        account.deposit(amount);
+    }
+
+    /**
+     * [Transfer Module]  Withdraw
+     */
+    @Transactional
+    public void withdraw(String accountNumber, Long amount) {
+        Account account = accountRepository.findByAccountNumber(accountNumber)
+                .orElseThrow(() -> new IllegalArgumentException("Account not found."));
+
+        account.withdraw(amount);
+    }
 }
