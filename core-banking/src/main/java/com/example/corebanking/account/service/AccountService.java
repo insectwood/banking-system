@@ -55,24 +55,24 @@ public class AccountService {
     }
 
     /**
-     * [Transfer Module] Deposit
+     * [Transfer Module] Deposit - Apply concurrency control
      */
     @Transactional
     public void deposit(String accountNumber, Long amount) {
-        Account account = accountRepository.findByAccountNumber(accountNumber)
+        //Account account = accountRepository.findByAccountNumber(accountNumber)
+        Account account = accountRepository.findByAccountNumberWithLock(accountNumber)
                 .orElseThrow(() -> new IllegalArgumentException("Account not found."));
 
         account.deposit(amount);
     }
 
     /**
-     * [Transfer Module]  Withdraw
+     * [Transfer Module]  Withdraw - Apply concurrency control
      */
     @Transactional
     public void withdraw(String accountNumber, Long amount) {
-        Account account = accountRepository.findByAccountNumber(accountNumber)
+        Account account = accountRepository.findByAccountNumberWithLock(accountNumber)
                 .orElseThrow(() -> new IllegalArgumentException("Account not found."));
-
         account.withdraw(amount);
     }
 }
