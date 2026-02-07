@@ -55,6 +55,16 @@ public class AccountService {
     }
 
     /**
+     * Account inquiry with Lock
+     */
+    public AccountResponse getAccountWithLock(String accountNumber) {
+        Account account = accountRepository.findByAccountNumberWithLock(accountNumber)
+                .orElseThrow(() -> new IllegalArgumentException("Account not found."));
+
+        return AccountResponse.from(account);
+    }
+
+    /**
      * [Transfer Module] Deposit - Apply concurrency control
      */
     @Transactional

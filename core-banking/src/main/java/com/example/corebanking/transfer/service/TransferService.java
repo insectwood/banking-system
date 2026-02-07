@@ -20,10 +20,23 @@ public class TransferService {
      */
     @Transactional
     public void transfer(TransferRequest request) {
+        String fromNo = request.fromAccountNumber();
+        String toNo = request.toAccountNumber();
+
         // 1. Validation: Sender and recipient must be different
         if (request.fromAccountNumber().equals(request.toAccountNumber())) {
             throw new IllegalArgumentException("The sender's and recipient's accounts cannot be the same.");
         }
+
+        // [Core logic for deadlock prevention]
+        // Enforce a consistent lock acquisition order by sorting account numbers.
+        String firstLock = fromNo.compareTo(toNo) < 0 ? fromNo : toNo;
+        String secondLock = fromNo.compareTo(toNo) < 0 ? toNo : fromNo;
+
+        // Acquire locks in order
+        accountService.getAccountWithLock(firstLock);
+        accountService.getAccountWithLock(secondLock);
+
 
         // 2. Order : Withdrawal -> Deposit
         // Check insufficient balance, within AccountService.
