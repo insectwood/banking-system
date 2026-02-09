@@ -4,15 +4,19 @@ import com.example.corebanking.account.domain.Account;
 import com.example.corebanking.account.repository.AccountRepository;
 import com.example.corebanking.transfer.dto.TransferRequest;
 import com.example.corebanking.transfer.service.TransferService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 class TransferDeadlockTest {
@@ -25,6 +29,8 @@ class TransferDeadlockTest {
     private TransferService transferService;
     @Autowired
     private AccountRepository accountRepository;
+    @Autowired
+    private AccountRepository transferRepository;
 
     @BeforeEach
     void setUp() {
@@ -42,7 +48,7 @@ class TransferDeadlockTest {
         // Thread 1: 1111 -> 2222
         executorService.submit(() -> {
             try {
-                transferService.transfer(new TransferRequest("1111", "2222", 1000L));
+                transferService.transfer(new TransferRequest("1111", "2222", 1000L, UUID.randomUUID().toString()));
             } finally {
                 latch.countDown();
             }
@@ -51,7 +57,7 @@ class TransferDeadlockTest {
         // Thread 2: 2222 -> 1111 (opposite directions)
         executorService.submit(() -> {
             try {
-                transferService.transfer(new TransferRequest("2222", "1111", 1000L));
+                transferService.transfer(new TransferRequest("2222", "1111", 1000L, UUID.randomUUID().toString()));
             } finally {
                 latch.countDown();
             }
@@ -59,5 +65,12 @@ class TransferDeadlockTest {
 
         // the system either hangs indefinitely or the database detects a deadlock and throws an error.
         latch.await();
+    }
+
+    @AfterEach
+    void tearDown() {
+        // Cleanup after testing.
+        transferRepository.deleteAllInBatch();
+        accountRepository.deleteAllInBatch();
     }
 }

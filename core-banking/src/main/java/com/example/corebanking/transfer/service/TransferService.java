@@ -20,10 +20,15 @@ public class TransferService {
      */
     @Transactional
     public void transfer(TransferRequest request) {
+        // 1. Idempotency Check: Verify if the transaction ID already exists
+        if (transferRepository.existsByTransactionId(request.transactionId())) {
+            System.out.println("Idempotency Check: " + request.transactionId());
+            return;
+        }
         String fromNo = request.fromAccountNumber();
         String toNo = request.toAccountNumber();
 
-        // 1. Validation: Sender and recipient must be different
+        // 2. Validation: Sender and recipient must be different
         if (request.fromAccountNumber().equals(request.toAccountNumber())) {
             throw new IllegalArgumentException("The sender's and recipient's accounts cannot be the same.");
         }
@@ -38,16 +43,17 @@ public class TransferService {
         accountService.getAccountWithLock(secondLock);
 
 
-        // 2. Order : Withdrawal -> Deposit
+        // 3. Order : Withdrawal -> Deposit
         // Check insufficient balance, within AccountService.
         accountService.withdraw(request.fromAccountNumber(), request.amount());
         accountService.deposit(request.toAccountNumber(), request.amount());
 
-        // 3. Transfer history
+        // 4. Transfer history
         transferRepository.save(Transfer.builder()
                 .fromAccountNumber(request.fromAccountNumber())
                 .toAccountNumber(request.toAccountNumber())
                 .amount(request.amount())
+                .transactionId(request.transactionId())
                 .build());
     }
 }

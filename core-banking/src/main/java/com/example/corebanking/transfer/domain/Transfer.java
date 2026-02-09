@@ -33,10 +33,14 @@ public class Transfer {
     @Column(nullable = false, updatable = false)
     private LocalDateTime transferredAt;
 
+    @Column(nullable = false, unique = true)
+    private String transactionId;
+
     @Builder
-    public Transfer(String fromAccountNumber, String toAccountNumber, Long amount) {
+    public Transfer(String fromAccountNumber, String toAccountNumber, Long amount, String transactionId) {
         this.fromAccountNumber = fromAccountNumber;
         this.toAccountNumber = toAccountNumber;
         this.amount = amount;
+        this.transactionId = transactionId;
     }
 }
