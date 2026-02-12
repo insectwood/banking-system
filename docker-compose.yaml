@@ -1,0 +1,91 @@
+name: banking-system
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.4.8
+    container_name: banking-system-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      TZ: Asia/Tokyo
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    networks:
+      - banking-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-ppassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Core Banking API
+  core-banking:
+    build:
+      context: ./core-banking
+      dockerfile: Dockerfile
+    container_name: banking-system-core-banking
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/core_banking?createDatabaseIfNotExist=true&serverTimezone=UTC&characterEncoding=UTF-8
+      SPRING_DATASOURCE_PASSWORD: password
+      TZ: Asia/Tokyo
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - banking-network
+
+  # Auth Service API
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    container_name: banking-system-auth-service
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/auth_db?createDatabaseIfNotExist=true&serverTimezone=UTC&characterEncoding=UTF-8
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: password
+      SERVER_PORT: 8081
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - banking-network
+
+  # React Frontend
+  banking-frontend:
+    build:
+      context: ./banking-frontend
+      dockerfile: Dockerfile
+    container_name: banking-system-banking-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./banking-frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:8080
+      - VITE_AUTH_URL=http://localhost:8081
+    depends_on:
+      - core-banking
+      - auth-service
+    networks:
+      - banking-network
+
+volumes:
+  mysql-data:
+
+networks:
+  banking-network:
+    driver: bridge
