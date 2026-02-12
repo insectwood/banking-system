@@ -4,6 +4,7 @@ import com.example.corebanking.account.domain.Account;
 import com.example.corebanking.account.dto.AccountCreateRequest;
 import com.example.corebanking.account.dto.AccountResponse;
 import com.example.corebanking.account.repository.AccountRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,11 +22,11 @@ public class AccountService {
      * Create account
      */
     @Transactional
-    public AccountResponse createAccount(AccountCreateRequest request) {
+    public AccountResponse createAccount(String userUuid, AccountCreateRequest request) {
         String newAccountNumber = generateAccountNumber();
 
         Account account = Account.builder()
-                .userId(request.userId())
+                .userUuid(userUuid)
                 .accountNumber(newAccountNumber)
                 .balance(request.initialBalance())
                 .build();
@@ -54,35 +55,11 @@ public class AccountService {
         return AccountResponse.from(account);
     }
 
-    /**
-     * Account inquiry with Lock
-     */
-    public AccountResponse getAccountWithLock(String accountNumber) {
-        Account account = accountRepository.findByAccountNumberWithLock(accountNumber)
-                .orElseThrow(() -> new IllegalArgumentException("Account not found."));
+    @Transactional(readOnly = true)
+    public AccountResponse getAccountByUserUuid(String userUuid) {
+        Account account = accountRepository.findByUserUuid(userUuid)
+                .orElseThrow(() -> new EntityNotFoundException("Account not found."));
 
         return AccountResponse.from(account);
-    }
-
-    /**
-     * [Transfer Module] Deposit - Apply concurrency control
-     */
-    @Transactional
-    public void deposit(String accountNumber, Long amount) {
-        //Account account = accountRepository.findByAccountNumber(accountNumber)
-        Account account = accountRepository.findByAccountNumberWithLock(accountNumber)
-                .orElseThrow(() -> new IllegalArgumentException("Account not found."));
-
-        account.deposit(amount);
-    }
-
-    /**
-     * [Transfer Module]  Withdraw - Apply concurrency control
-     */
-    @Transactional
-    public void withdraw(String accountNumber, Long amount) {
-        Account account = accountRepository.findByAccountNumberWithLock(accountNumber)
-                .orElseThrow(() -> new IllegalArgumentException("Account not found."));
-        account.withdraw(amount);
     }
 }

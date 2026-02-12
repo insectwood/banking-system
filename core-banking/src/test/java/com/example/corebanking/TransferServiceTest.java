@@ -25,30 +25,40 @@ class TransferServiceTest {
     @Autowired private AccountRepository accountRepository;
     @Autowired private TransferRepository transferRepository;
 
+    private final String SENDER_UUID = "sender-uuid-001";
+    private final String RECIPIENT_UUID = "recipient-uuid-002";
+
     // [Core] Ensure the database is cleared before each test execution.
     @BeforeEach
     void setUp() {
         transferRepository.deleteAllInBatch();
         accountRepository.deleteAllInBatch();
 
-        accountRepository.save(Account.builder()
-                .userId(1L).accountNumber("1111").balance(10000L).build());
-        accountRepository.save(Account.builder()
-                .userId(2L).accountNumber("2222").balance(0L).build());
+        accountRepository.saveAndFlush(Account.builder()
+                .userUuid(SENDER_UUID)
+                .accountNumber("1111")
+                .balance(10000L)
+                .build());
+
+        accountRepository.saveAndFlush(Account.builder()
+                .userUuid(RECIPIENT_UUID)
+                .accountNumber("2222")
+                .balance(0L)
+                .build());
     }
 
     @Test
     @DisplayName("Successful transfer: The amount should be transferred from Account A to Account B correctly.")
     void transfer_success() {
-        // given: Create two accounts in advance.
-        TransferRequest request = new TransferRequest("1111", "2222", 3000L, UUID.randomUUID().toString());
+        // given: Create account in advance.
+        TransferRequest request = new TransferRequest("2222", 3000L, UUID.randomUUID().toString());
 
         // when: Call the transfer service.
-        transferService.transfer(request);
+        transferService.transfer(SENDER_UUID, request);
 
         // then: Verify if the balances are correct.
-        Account updatedSender = accountRepository.findByAccountNumber("1111").get();
-        Account updatedReceiver = accountRepository.findByAccountNumber("2222").get();
+        Account updatedSender = accountRepository.findByAccountNumber("1111").orElseThrow();
+        Account updatedReceiver = accountRepository.findByAccountNumber("2222").orElseThrow();
 
         assertThat(updatedSender.getBalance()).isEqualTo(7000L); // 10000 - 3000
         assertThat(updatedReceiver.getBalance()).isEqualTo(3000L); // 0 + 3000
@@ -59,17 +69,17 @@ class TransferServiceTest {
     void transfer_idempotency_test() {
         // given
         String txId = "UNIQUE-TX-ID-123";
-        TransferRequest request = new TransferRequest("1111", "2222", 1000L, txId);
+        TransferRequest request = new TransferRequest("2222", 1000L, txId);
 
         // when
-        transferService.transfer(request);
-
-        // and
-        transferService.transfer(request);
+        transferService.transfer(SENDER_UUID, request);
+        transferService.transfer(SENDER_UUID, request);
 
         // then
-        Account sender = accountRepository.findByAccountNumber("1111").get();
-        assertThat(sender.getBalance()).isEqualTo(9000L); //The balance should be deducted only 1 time from 10000 yen
+        Account sender = accountRepository.findByAccountNumber("1111").orElseThrow();
+        assertThat(sender.getBalance()).isEqualTo(9000L); // 10000 - 1000
+
+        assertThat(transferRepository.count()).isEqualTo(1L);
     }
 
     @AfterEach

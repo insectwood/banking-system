@@ -6,6 +6,8 @@ import com.example.corebanking.account.service.AccountService;
 import com.example.corebanking.common.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,8 +22,10 @@ public class AccountController {
      * Request : POST /api/v1/accounts
      */
     @PostMapping
-    public ApiResponse<AccountResponse> createAccount(@RequestBody @Valid AccountCreateRequest request) {
-        AccountResponse response = accountService.createAccount(request);
+    public ApiResponse<AccountResponse> createAccount(
+            @AuthenticationPrincipal String userUuid,
+            @RequestBody @Valid AccountCreateRequest request) {
+        AccountResponse response = accountService.createAccount(userUuid, request);
 
         return ApiResponse.success("Account opened successfully.", response);
     }
@@ -34,5 +38,16 @@ public class AccountController {
     public ApiResponse<AccountResponse> getAccount(@PathVariable String accountNumber) {
         AccountResponse response = accountService.getAccount(accountNumber);
         return ApiResponse.success(response);
+    }
+
+    /**
+     * Account inquiry API currently user
+     * GET /api/v1/accounts/me
+     */
+    @GetMapping("/me")
+    public ResponseEntity<AccountResponse> getMyAccount(
+            @AuthenticationPrincipal String userUuid
+    ) {
+        return ResponseEntity.ok(accountService.getAccountByUserUuid(userUuid));
     }
 }

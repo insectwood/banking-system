@@ -1,59 +1,100 @@
 package com.example.corebanking.transfer.service;
 
+import com.example.corebanking.account.domain.Account;
+import com.example.corebanking.account.repository.AccountRepository;
 import com.example.corebanking.account.service.AccountService;
 import com.example.corebanking.transfer.domain.Transfer;
 import com.example.corebanking.transfer.dto.TransferRequest;
 import com.example.corebanking.transfer.repository.TransferRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
+import java.util.List;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TransferService {
 
     private final AccountService accountService;
     private final TransferRepository transferRepository;
+    private final AccountRepository accountRepository;
 
     /**
-     * Transfer logic
+     * Execute transfer between accounts (With concurrency control and deadlock prevention)
+     *  @param userUuid Identifier of the transfer requester
+     *  @param request  Transfer request details (Recipient account, amount, unique transaction ID)
+     *  @return Returns the transactionId upon success
      */
     @Transactional
-    public void transfer(TransferRequest request) {
-        // 1. Idempotency Check: Verify if the transaction ID already exists
-        if (transferRepository.existsByTransactionId(request.transactionId())) {
-            System.out.println("Idempotency Check: " + request.transactionId());
-            return;
-        }
-        String fromNo = request.fromAccountNumber();
-        String toNo = request.toAccountNumber();
+    public String transfer(String userUuid, TransferRequest request) {
+        log.info("transfer start - userUuid: {}, transactionId: {}",
+                userUuid, request.transactionId());
 
-        // 2. Validation: Sender and recipient must be different
-        if (request.fromAccountNumber().equals(request.toAccountNumber())) {
+        // Idempotency Check
+        if (transferRepository.existsByTransactionId(request.transactionId())) {
+            return "ALREADY_PROCESSED:" + request.transactionId();
+        }
+
+        // Pre-fetch IDs to determine locking order
+        Long fromAccountId = accountRepository.findIdByUserUuid(userUuid)
+                .orElseThrow(() -> new EntityNotFoundException("Withdrawal account not found.."));
+        Long toAccountId = accountRepository.findIdByAccountNumber(request.toAccountNumber())
+                .orElseThrow(() -> new EntityNotFoundException("Deposit account not found."));
+
+        // Validation: Sender and recipient must be different
+        if (fromAccountId.equals(toAccountId)) {
             throw new IllegalArgumentException("The sender's and recipient's accounts cannot be the same.");
         }
 
         // [Core logic for deadlock prevention]
-        // Enforce a consistent lock acquisition order by sorting account numbers.
-        String firstLock = fromNo.compareTo(toNo) < 0 ? fromNo : toNo;
-        String secondLock = fromNo.compareTo(toNo) < 0 ? toNo : fromNo;
+        // Deadlock Prevention: Create a list after sorting IDs
+        List<Long> accountIds = Arrays.asList(fromAccountId, toAccountId);
+        accountIds.sort(Long::compareTo);
 
-        // Acquire locks in order
-        accountService.getAccountWithLock(firstLock);
-        accountService.getAccountWithLock(secondLock);
+        log.info("Account PK ID Lock Order - first: {}, second: {}", accountIds.get(0), accountIds.get(1));
 
+        // Acquire Pessimistic Locks (FOR UPDATE)
+        List<Account> lockedAccounts = accountRepository.findByIdsWithLock(accountIds);
 
-        // 3. Order : Withdrawal -> Deposit
-        // Check insufficient balance, within AccountService.
-        accountService.withdraw(request.fromAccountNumber(), request.amount());
-        accountService.deposit(request.toAccountNumber(), request.amount());
+        if (lockedAccounts.size() != 2) {
+            throw new EntityNotFoundException("Some accounts not be found.");
+        }
 
-        // 4. Transfer history
-        transferRepository.save(Transfer.builder()
-                .fromAccountNumber(request.fromAccountNumber())
-                .toAccountNumber(request.toAccountNumber())
+        // Re-map to locked objects
+        Account sender = lockedAccounts.stream()
+                .filter(a -> a.getId().equals(fromAccountId))
+                .findFirst().orElseThrow();
+        Account recipient = lockedAccounts.stream()
+                .filter(a -> a.getId().equals(toAccountId))
+                .findFirst().orElseThrow();
+
+        log.info("Transfer processing - from: {} (balance: {}), to: {}, amount: {}",
+                sender.getAccountNumber(),
+                sender.getBalance(),
+                recipient.getAccountNumber(),
+                request.amount());
+
+        // Execute business logic
+        sender.withdraw(request.amount());
+        recipient.deposit(request.amount());
+
+        accountRepository.save(sender);
+        accountRepository.save(recipient);
+
+        // Save transaction history
+        Transfer transfer = transferRepository.save(Transfer.builder()
+                .fromAccountNumber(sender.getAccountNumber())
+                .toAccountNumber(recipient.getAccountNumber())
                 .amount(request.amount())
                 .transactionId(request.transactionId())
+                .userUuid(userUuid)
                 .build());
+
+        return transfer.getTransactionId();
     }
 }

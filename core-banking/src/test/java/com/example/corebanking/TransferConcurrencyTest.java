@@ -16,6 +16,7 @@ import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -26,59 +27,67 @@ class TransferConcurrencyTest {
     @Autowired private AccountRepository accountRepository;
     @Autowired private TransferRepository transferRepository;
 
+    private final String SENDER_UUID = "sender-uuid-123";
+    private final String RECIPIENT_UUID = "recipient-uuid-456";
+
     @BeforeEach
     void setUp() {
         transferRepository.deleteAllInBatch();
         accountRepository.deleteAllInBatch();
 
         accountRepository.saveAndFlush(Account.builder()
-                .userId(1L).accountNumber("1111").balance(1000L).build());
+                .userUuid(SENDER_UUID)
+                .accountNumber("1111")
+                .balance(1000L)
+                .build());
+
         accountRepository.saveAndFlush(Account.builder()
-                .userId(2L).accountNumber("2222").balance(0L).build());
+                .userUuid(RECIPIENT_UUID)
+                .accountNumber("2222")
+                .balance(0L)
+                .build());
     }
 
     @Test
     @DisplayName("Concurrency issue test: 100 users transfer 10 yen simultaneously")
-    void transfer_concurrency_fail_test() throws InterruptedException {
+    void transfer_concurrency_test() throws InterruptedException {
         int threadCount = 100;
-        // Set up multi-threaded environment (Thread pool size: 32)
         ExecutorService executorService = Executors.newFixedThreadPool(32);
-        // Tool to wait for 100 requests to complete (CountDownLatch)
         CountDownLatch latch = new CountDownLatch(threadCount);
-
+        AtomicInteger failCount = new AtomicInteger(0);
         // when: Execute 100 transfer requests 'concurrently'
         for (int i = 0; i < threadCount; i++) {
             executorService.submit(() -> {
                 try {
                     transferService.transfer(
-                            new TransferRequest("1111", "2222", 10L, UUID.randomUUID().toString())
+                            SENDER_UUID,
+                            new TransferRequest("2222", 10L, UUID.randomUUID().toString())
                     );
-                } catch (Exception e){
-                    System.err.println("transfer failed: " + e.getMessage());
-                    e.printStackTrace();
-                }
-                    finally {
+                } catch (Exception e) {
+                    System.err.println("Transfer failed.: " + e.getMessage());
+                } finally {
                     latch.countDown();
                 }
             });
         }
 
-        latch.await();// Wait until all 100 transfers are finished
+        latch.await(); // Wait until all 100 transfers are finished
 
-        // then: Verify
-        Account sender = accountRepository.findByAccountNumber("1111").orElseThrow();
-        Account recipient = accountRepository.findByAccountNumber("2222").orElseThrow();
+        Account sender = accountRepository.findByAccountNumber("1111")
+                .orElseThrow(() -> new RuntimeException("Sender not found"));
+        Account recipient = accountRepository.findByAccountNumber("2222")
+                .orElseThrow(() -> new RuntimeException("Recipient not found"));
 
         // [Expected Result]
         // Sender: 1000 yen - (10 yen * 100 times) = 0 yen
         // Recipient: 0 yen + (10 yen * 100 times) = 1,000 yen
         assertThat(sender.getBalance()).isEqualTo(0L);
         assertThat(recipient.getBalance()).isEqualTo(1000L);
+        assertThat(transferRepository.count()).isEqualTo(100L);
     }
 
     @AfterEach
     void tearDown() {
-        // Cleanup after testing.
         transferRepository.deleteAllInBatch();
         accountRepository.deleteAllInBatch();
     }

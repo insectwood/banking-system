@@ -29,6 +29,9 @@ public class Transfer {
     @Column(nullable = false)
     private Long amount;
 
+    @Column(nullable = false)
+    private String userUuid;
+
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime transferredAt;
@@ -37,10 +40,11 @@ public class Transfer {
     private String transactionId;
 
     @Builder
-    public Transfer(String fromAccountNumber, String toAccountNumber, Long amount, String transactionId) {
+    public Transfer(String fromAccountNumber, String toAccountNumber, Long amount, String userUuid, String transactionId) {
         this.fromAccountNumber = fromAccountNumber;
         this.toAccountNumber = toAccountNumber;
         this.amount = amount;
+        this.userUuid = userUuid;
         this.transactionId = transactionId;
     }
 }

@@ -1,10 +1,7 @@
 package com.example.corebanking.account.domain;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Getter
@@ -15,8 +12,8 @@ public class Account {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private Long userId;
+    @Column(nullable = false, unique = true)
+    private String userUuid;
 
     @Column(nullable = false, unique = true)
     private String accountNumber;
@@ -25,12 +22,12 @@ public class Account {
     private Long balance;
 
     // [Point] Versioning for Optimistic Lock
-    @Version
-    private Long version;
+    //@Version
+    //private Long version;
 
     @Builder
-    public Account(Long userId, String accountNumber, Long balance) {
-        this.userId = userId;
+    public Account(String userUuid, String accountNumber, Long balance) {
+        this.userUuid = userUuid;
         this.accountNumber = accountNumber;
         this.balance = balance;
     }

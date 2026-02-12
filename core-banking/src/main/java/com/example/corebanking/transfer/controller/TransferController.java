@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,8 +21,11 @@ public class TransferController {
     private final TransferService transferService;
 
     @PostMapping
-    public ResponseEntity<String> transfer(@RequestBody @Valid TransferRequest request) {
-        transferService.transfer(request);
-        return ResponseEntity.ok("Transfer completed successfully. Transaction ID : " + request.transactionId());
+    public ResponseEntity<String> transfer(
+            @AuthenticationPrincipal String userUuid, // 토큰에서 안전하게 추출
+            @RequestBody @Valid TransferRequest request) {
+        String txId = transferService.transfer(userUuid, request);
+        //transferService.transfer(request);
+        return ResponseEntity.ok("Transfer completed successfully. Transaction ID : " + txId);
     }
 }
