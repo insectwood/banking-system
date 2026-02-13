@@ -12,14 +12,14 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/accounts")
+@RequestMapping("/banking/accounts")
 public class AccountController {
 
     private final AccountService accountService;
 
     /**
      * Account create API
-     * Request : POST /api/v1/accounts
+     * Request : POST /api/v1/banking/accounts
      */
     @PostMapping
     public ApiResponse<AccountResponse> createAccount(
@@ -32,7 +32,7 @@ public class AccountController {
 
     /**
      * Account inquiry API
-     * GET /api/v1/accounts/{accountNumber}
+     * GET /api/v1/accounts/banking/{accountNumber}
      */
     @GetMapping("/{accountNumber}")
     public ApiResponse<AccountResponse> getAccount(@PathVariable String accountNumber) {
@@ -42,7 +42,7 @@ public class AccountController {
 
     /**
      * Account inquiry API currently user
-     * GET /api/v1/accounts/me
+     * GET /api/v1/banking/accounts/me
      */
     @GetMapping("/me")
     public ResponseEntity<AccountResponse> getMyAccount(

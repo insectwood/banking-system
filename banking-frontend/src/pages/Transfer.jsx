@@ -15,8 +15,8 @@ const Transfer = () => {
 
         setIsLoading(true);
         try {
-            // Call transfer API (POST /api/v1/transfers)
-            await bankingApi.post('/api/v1/transfers', {
+            // Call transfer API (POST /api/v1/banking/transfers)
+            await bankingApi.post('/api/v1/banking/transfers', {
                 toAccountNumber: toAccount,
                 amount: Number(amount),
                 transactionId: `TX-${Date.now()}`, // Idempotency Key

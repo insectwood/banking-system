@@ -62,6 +62,32 @@ services:
     networks:
       - banking-network
 
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    image: banking-system-api-gateway:latest
+    container_name: banking-system-api-gateway
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      SPRING_CLOUD_GATEWAY_ROUTES_0_ID: core-banking
+      SPRING_CLOUD_GATEWAY_ROUTES_0_URI: http://core-banking:8080
+      SPRING_CLOUD_GATEWAY_ROUTES_0_PREDICATES_0: Path=/api/v1/banking/**
+      SPRING_CLOUD_GATEWAY_ROUTES_0_FILTERS_0: StripPrefix=2
+      
+      SPRING_CLOUD_GATEWAY_ROUTES_1_ID: auth-service
+      SPRING_CLOUD_GATEWAY_ROUTES_1_URI: http://auth-service:8081
+      SPRING_CLOUD_GATEWAY_ROUTES_1_PREDICATES_0: Path=/api/v1/auth/**
+      SPRING_CLOUD_GATEWAY_ROUTES_1_FILTERS_0: StripPrefix=2
+    depends_on:
+      - core-banking
+      - auth-service
+    networks:
+      - banking-network
+
   # React Frontend
   banking-frontend:
     build:
@@ -75,11 +101,10 @@ services:
       - ./banking-frontend:/app
       - /app/node_modules
     environment:
-      - VITE_API_URL=http://localhost:8080
-      - VITE_AUTH_URL=http://localhost:8081
+      - VITE_API_URL=http://localhost:8000/api/v1/banking
+      - VITE_AUTH_URL=http://localhost:8000/api/v1/auth
     depends_on:
-      - core-banking
-      - auth-service
+      - api-gateway
     networks:
       - banking-network
 

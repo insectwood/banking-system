@@ -11,7 +11,7 @@ const Dashboard = () => {
         const fetchAccountData = async () => {
             try {
                 // Call the banking server's account information endpoint
-                const response = await bankingApi.get('/api/v1/accounts/me');
+                const response = await bankingApi.get('/api/v1/banking/accounts/me');
                 setAccountInfo(response.data);
             } catch (error) {
                 console.error("Failed to load data:", error);
