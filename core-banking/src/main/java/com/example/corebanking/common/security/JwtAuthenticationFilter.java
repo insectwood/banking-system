@@ -1,7 +1,6 @@
 package com.example.corebanking.common.security;
 
 import com.example.corebanking.global.security.JwtProvider;
-import io.jsonwebtoken.io.IOException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,6 +11,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import java.io.IOException;
 import java.util.Collections;
 
 @RequiredArgsConstructor
@@ -39,11 +39,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 
-        try {
-            filterChain.doFilter(request, response);
-        } catch (java.io.IOException e) {
-            throw new RuntimeException(e);
-        }
+        filterChain.doFilter(request, response);
     }
 
     private String resolveToken(HttpServletRequest request) {

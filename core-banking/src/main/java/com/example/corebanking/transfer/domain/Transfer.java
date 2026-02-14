@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -27,7 +28,7 @@ public class Transfer {
     private String toAccountNumber;
 
     @Column(nullable = false)
-    private Long amount;
+    private BigDecimal amount;
 
     @Column(nullable = false)
     private String userUuid;
@@ -40,7 +41,7 @@ public class Transfer {
     private String transactionId;
 
     @Builder
-    public Transfer(String fromAccountNumber, String toAccountNumber, Long amount, String userUuid, String transactionId) {
+    public Transfer(String fromAccountNumber, String toAccountNumber, BigDecimal amount, String userUuid, String transactionId) {
         this.fromAccountNumber = fromAccountNumber;
         this.toAccountNumber = toAccountNumber;
         this.amount = amount;

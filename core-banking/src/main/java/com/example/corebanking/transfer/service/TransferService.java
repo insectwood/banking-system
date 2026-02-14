@@ -9,6 +9,7 @@ import com.example.corebanking.transfer.repository.TransferRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -86,15 +87,19 @@ public class TransferService {
         accountRepository.save(sender);
         accountRepository.save(recipient);
 
-        // Save transaction history
-        Transfer transfer = transferRepository.save(Transfer.builder()
-                .fromAccountNumber(sender.getAccountNumber())
-                .toAccountNumber(recipient.getAccountNumber())
-                .amount(request.amount())
-                .transactionId(request.transactionId())
-                .userUuid(userUuid)
-                .build());
+        try {
+            // Save transaction history
+            Transfer transfer = transferRepository.save(Transfer.builder()
+                    .fromAccountNumber(sender.getAccountNumber())
+                    .toAccountNumber(recipient.getAccountNumber())
+                    .amount(request.amount())
+                    .transactionId(request.transactionId())
+                    .userUuid(userUuid)
+                    .build());
+        } catch (DataIntegrityViolationException e) {
+            return "ALREADY_PROCESSED:" + request.transactionId();
+        }
 
-        return transfer.getTransactionId();
+        return request.transactionId();
     }
 }

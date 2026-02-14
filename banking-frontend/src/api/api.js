@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Instance for banking services
 const bankingApi = axios.create({
-    baseURL: 'http://localhost:8000',
+    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1/banking',
 });
 
 // Automatically inject JWT into all requests via interceptor
@@ -14,5 +14,7 @@ bankingApi.interceptors.request.use((config) => {
     return config;
 });
 
-export const authApi = axios.create({ baseURL: 'http://localhost:8000' });
+export const authApi = axios.create({
+    baseURL: import.meta.env.VITE_AUTH_URL || 'http://localhost:8000/api/v1/auth',
+});
 export default bankingApi;

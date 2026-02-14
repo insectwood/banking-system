@@ -27,11 +27,11 @@ public class AuthService {
     public LoginResponse login(LoginRequest request) {
         // 1. Check for user existence
         User user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new IllegalArgumentException("Email not found."));
+                .orElseThrow(() -> new IllegalArgumentException("Email or Password Invalid."));
 
         // 2. Verify password match
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
-            throw new IllegalArgumentException("Invalid password.");
+            throw new IllegalArgumentException("Email or Password Invalid.");
         }
 
         // 3. Generate JWT token (Using userUuid)
