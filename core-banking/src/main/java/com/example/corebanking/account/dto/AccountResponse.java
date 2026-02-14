@@ -2,9 +2,11 @@ package com.example.corebanking.account.dto;
 
 import com.example.corebanking.account.domain.Account;
 
+import java.math.BigDecimal;
+
 public record AccountResponse(
         String accountNumber,
-        Long balance,
+        BigDecimal balance,
         String userUuid
 ) {
     public static AccountResponse from(Account account) {

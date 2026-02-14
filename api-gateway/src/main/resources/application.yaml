@@ -14,6 +14,7 @@ spring:
             - Path=/api/v1/auth/**
           filters:
             - StripPrefix=2
+            - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_FIRST
 
         # Core Banking Service
         - id: core-banking
@@ -22,8 +23,11 @@ spring:
             - Path=/api/v1/banking/**
           filters:
             - StripPrefix=2
+            - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_FIRST
+
       # CORS
       globalcors:
+        add-to-simple-url-handler-mapping: true
         corsConfigurations:
           '[/**]':
             allowedOrigins:
@@ -34,5 +38,7 @@ spring:
               - PUT
               - DELETE
               - OPTIONS
-            allowedHeaders: "*"
+            allowedHeaders:
+              - "*"
             allowCredentials: true
+            maxAge: 3600

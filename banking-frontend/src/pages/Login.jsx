@@ -14,7 +14,7 @@ const Login = () => {
 
         try {
             // 1. Send login request to auth-service
-            const response = await authApi.post('/api/v1/auth/login', {
+            const response = await authApi.post('/login', {
                 email: email,
                 password: password
             });

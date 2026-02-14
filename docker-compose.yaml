@@ -78,11 +78,13 @@ services:
       SPRING_CLOUD_GATEWAY_ROUTES_0_URI: http://core-banking:8080
       SPRING_CLOUD_GATEWAY_ROUTES_0_PREDICATES_0: Path=/api/v1/banking/**
       SPRING_CLOUD_GATEWAY_ROUTES_0_FILTERS_0: StripPrefix=2
+      SPRING_CLOUD_GATEWAY_ROUTES_0_FILTERS_1: DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_FIRST
       
       SPRING_CLOUD_GATEWAY_ROUTES_1_ID: auth-service
       SPRING_CLOUD_GATEWAY_ROUTES_1_URI: http://auth-service:8081
       SPRING_CLOUD_GATEWAY_ROUTES_1_PREDICATES_0: Path=/api/v1/auth/**
       SPRING_CLOUD_GATEWAY_ROUTES_1_FILTERS_0: StripPrefix=2
+      SPRING_CLOUD_GATEWAY_ROUTES_1_FILTERS_1: DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_FIRST
     depends_on:
       - core-banking
       - auth-service

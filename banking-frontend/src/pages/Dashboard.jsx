@@ -10,15 +10,8 @@ const Dashboard = () => {
     useEffect(() => {
         const fetchAccountData = async () => {
             try {
-                const accessToken = localStorage.getItem('accessToken'); // 로그인 시 저장한 토큰
                 // Call the banking server's account information endpoint
-                const response = await bankingApi.get('/api/v1/banking/accounts/me', {
-                     headers: {
-                         'Authorization': `Bearer ${accessToken}`
-                     },
-                });
-                console.log("데이터 수신 성공:", response.data);
-
+                const response = await bankingApi.get('/accounts/me');
                 setAccountInfo(response.data);
             } catch (error) {
                 console.error("Failed to load data:", error);
@@ -26,26 +19,12 @@ const Dashboard = () => {
                     alert("Session has expired. Please log in again.");
                     navigate('/login');
                 }
-
-                if (error.response) {
-                    // 서버가 응답은 보냈으나 (4xx, 5xx)
-                    console.error("서버 응답 에러:", error.response.status, error.response.data);
-                } else if (error.request) {
-                    // 요청은 갔으나 응답을 못 받음 (CORS 에러가 여기 해당함)
-                    console.error("응답을 읽지 못함(CORS 혹은 네트워크):", error.request);
-                } else {
-                    console.error("설정 에러:", error.message);
-                }
-
             } finally {
                 setLoading(false);
             }
         };
 
-
-
         fetchAccountData();
-
     }, [navigate]);
 
     const handleLogout = () => {
