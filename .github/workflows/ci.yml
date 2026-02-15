@@ -1,0 +1,115 @@
+name: CI Pipeline
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+  push:
+    branches: [ develop ]
+
+jobs:
+  # ──────────────────────────────────────
+  # Auth Service - Build & Test
+  # ──────────────────────────────────────
+  auth-service-test:
+    name: Auth Service - Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./auth-service/gradlew
+
+      - name: Build & Test
+        working-directory: ./auth-service
+        run: ./gradlew test jacocoTestReport
+
+      - name: Upload JaCoCo Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: auth-service-coverage
+          path: auth-service/build/reports/jacoco/test/html/
+
+  # ──────────────────────────────────────
+  # Core Banking - Build & Test
+  # ──────────────────────────────────────
+  core-banking-test:
+    name: Core Banking - Test
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: core_banking
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./core-banking/gradlew
+
+      - name: Build & Test
+        working-directory: ./core-banking
+        env:
+          SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/core_banking
+          SPRING_DATASOURCE_USERNAME: root
+          SPRING_DATASOURCE_PASSWORD: password
+        run: ./gradlew test jacocoTestReport
+
+      - name: Upload JaCoCo Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: core-banking-coverage
+          path: core-banking/build/reports/jacoco/test/html/
+
+  # ──────────────────────────────────────
+  # Frontend - Build & Lint
+  # ──────────────────────────────────────
+  frontend-build:
+    name: Frontend - Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: banking-frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./banking-frontend
+        run: npm ci
+
+      - name: Lint check
+        working-directory: ./banking-frontend
+        run: npm run lint --if-present
+
+      - name: Build
+        working-directory: ./banking-frontend
+        run: npm run build
