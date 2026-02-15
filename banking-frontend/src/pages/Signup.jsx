@@ -2,32 +2,28 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '../api/api';
 
-const Login = () => {
+const Signup = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [name, setName] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
-    const handleLogin = async (e) => {
+    const handleSignup = async (e) => {
         e.preventDefault();
         setIsLoading(true);
 
         try {
-            // 1. Send login request to auth-service
-            const response = await authApi.post('/login', {
-                email: email,
-                password: password
+            await authApi.post('/signup', {
+                email,
+                password,
+                name,
             });
 
-            // 2. Store the received JWT token in browser local storage
-            const { accessToken } = response.data;
-            localStorage.setItem('accessToken', accessToken);
-
-            // 3. Redirect to dashboard upon success
-            alert('Login successful!');
-            navigate('/dashboard');
+            alert('Sign-up completed! Please log in.');
+            navigate('/login');
         } catch (error) {
-            const errorMsg = error.response?.data?.message || 'An error occurred during login.';
+            const errorMsg = error.response?.data?.message || 'An error occurred during sign-up.';
             alert(errorMsg);
         } finally {
             setIsLoading(false);
@@ -36,10 +32,18 @@ const Login = () => {
 
     return (
         <div style={styles.container}>
-            <div style={styles.loginBox}>
-                <h2>Banking SSO Login</h2>
-                <p>Log in via Auth Service</p>
-                <form onSubmit={handleLogin} style={styles.form}>
+            <div style={styles.signupBox}>
+                <h2>Create Account</h2>
+                <p>Register for Banking SSO</p>
+                <form onSubmit={handleSignup} style={styles.form}>
+                    <input
+                        type="text"
+                        placeholder="Enter Name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        style={styles.input}
+                        required
+                    />
                     <input
                         type="email"
                         placeholder="Enter Email"
@@ -55,14 +59,15 @@ const Login = () => {
                         onChange={(e) => setPassword(e.target.value)}
                         style={styles.input}
                         required
+                        minLength={8}
                     />
                     <button type="submit" disabled={isLoading} style={styles.button}>
-                        {isLoading ? 'Logging in...' : 'Login'}
+                        {isLoading ? 'Creating...' : 'Sign Up'}
                     </button>
                 </form>
-                <p style={styles.signupLink}>
-                    Don't have an account?{' '}
-                    <span onClick={() => navigate('/signup')} style={styles.link}>Sign up</span>
+                <p style={styles.loginLink}>
+                    Already have an account?{' '}
+                    <span onClick={() => navigate('/login')} style={styles.link}>Log in</span>
                 </p>
             </div>
         </div>
@@ -71,10 +76,12 @@ const Login = () => {
 
 const styles = {
     container: { display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#f0f2f5' },
-    loginBox: { padding: '40px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', textAlign: 'center' },
+    signupBox: { padding: '40px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', textAlign: 'center', minWidth: '360px' },
     form: { display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '20px' },
     input: { padding: '12px', borderRadius: '4px', border: '1px solid #ddd', fontSize: '16px' },
-    button: { padding: '12px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '16px' }
+    button: { padding: '12px', backgroundColor: '#2ecc71', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '16px' },
+    loginLink: { marginTop: '20px', fontSize: '14px', color: '#666' },
+    link: { color: '#007bff', cursor: 'pointer', textDecoration: 'underline' },
 };
 
-export default Login;
+export default Signup;

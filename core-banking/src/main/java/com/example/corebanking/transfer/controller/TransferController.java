@@ -1,16 +1,17 @@
 package com.example.corebanking.transfer.controller;
 
+import com.example.corebanking.common.ApiResponse;
 import com.example.corebanking.transfer.dto.TransferRequest;
+import com.example.corebanking.transfer.dto.TransferResponse;
 import com.example.corebanking.transfer.service.TransferService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/banking/transfers")
@@ -22,10 +23,16 @@ public class TransferController {
 
     @PostMapping
     public ResponseEntity<String> transfer(
-            @AuthenticationPrincipal String userUuid, // 토큰에서 안전하게 추출
+            @AuthenticationPrincipal String userUuid,
             @RequestBody @Valid TransferRequest request) {
         String txId = transferService.transfer(userUuid, request);
-        //transferService.transfer(request);
         return ResponseEntity.ok("Transfer completed successfully. Transaction ID : " + txId);
+    }
+
+    @GetMapping("/me")
+    public ApiResponse<List<TransferResponse>> getMyTransfers(
+            @AuthenticationPrincipal String userUuid) {
+        List<TransferResponse> transfers = transferService.getTransfersByUser(userUuid);
+        return ApiResponse.success(transfers);
     }
 }

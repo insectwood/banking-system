@@ -5,6 +5,7 @@ import com.example.corebanking.account.repository.AccountRepository;
 import com.example.corebanking.account.service.AccountService;
 import com.example.corebanking.transfer.domain.Transfer;
 import com.example.corebanking.transfer.dto.TransferRequest;
+import com.example.corebanking.transfer.dto.TransferResponse;
 import com.example.corebanking.transfer.repository.TransferRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -101,5 +102,18 @@ public class TransferService {
         }
 
         return request.transactionId();
+    }
+
+    /**
+     *  Get User's Transfers histories
+     *  @param userUuid Identifier of the transfer requester
+     *  @return Returns the transfers list
+     */
+    @Transactional(readOnly = true)
+    public List<TransferResponse> getTransfersByUser(String userUuid) {
+        return transferRepository.findByUserUuidOrderByTransferredAtDesc(userUuid)
+                .stream()
+                .map(TransferResponse::from)
+                .toList();
     }
 }
