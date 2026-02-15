@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -38,13 +39,13 @@ class TransferConcurrencyTest {
         accountRepository.saveAndFlush(Account.builder()
                 .userUuid(SENDER_UUID)
                 .accountNumber("1111")
-                .balance(1000L)
+                .balance(BigDecimal.valueOf(1000))
                 .build());
 
         accountRepository.saveAndFlush(Account.builder()
                 .userUuid(RECIPIENT_UUID)
                 .accountNumber("2222")
-                .balance(0L)
+                .balance(BigDecimal.ZERO)
                 .build());
     }
 
@@ -61,7 +62,7 @@ class TransferConcurrencyTest {
                 try {
                     transferService.transfer(
                             SENDER_UUID,
-                            new TransferRequest("2222", 10L, UUID.randomUUID().toString())
+                            new TransferRequest("2222", BigDecimal.valueOf(10), UUID.randomUUID().toString())
                     );
                 } catch (Exception e) {
                     System.err.println("Transfer failed.: " + e.getMessage());
@@ -81,8 +82,8 @@ class TransferConcurrencyTest {
         // [Expected Result]
         // Sender: 1000 yen - (10 yen * 100 times) = 0 yen
         // Recipient: 0 yen + (10 yen * 100 times) = 1,000 yen
-        assertThat(sender.getBalance()).isEqualTo(0L);
-        assertThat(recipient.getBalance()).isEqualTo(1000L);
+        assertThat(sender.getBalance()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(recipient.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(1000));
         assertThat(transferRepository.count()).isEqualTo(100L);
     }
 

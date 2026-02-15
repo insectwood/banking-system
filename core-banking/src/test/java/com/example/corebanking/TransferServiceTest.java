@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,13 +38,13 @@ class TransferServiceTest {
         accountRepository.saveAndFlush(Account.builder()
                 .userUuid(SENDER_UUID)
                 .accountNumber("1111")
-                .balance(10000L)
+                .balance(BigDecimal.valueOf(10000))
                 .build());
 
         accountRepository.saveAndFlush(Account.builder()
                 .userUuid(RECIPIENT_UUID)
                 .accountNumber("2222")
-                .balance(0L)
+                .balance(BigDecimal.ZERO)
                 .build());
     }
 
@@ -51,7 +52,7 @@ class TransferServiceTest {
     @DisplayName("Successful transfer: The amount should be transferred from Account A to Account B correctly.")
     void transfer_success() {
         // given: Create account in advance.
-        TransferRequest request = new TransferRequest("2222", 3000L, UUID.randomUUID().toString());
+        TransferRequest request = new TransferRequest("2222", BigDecimal.valueOf(3000), UUID.randomUUID().toString());
 
         // when: Call the transfer service.
         transferService.transfer(SENDER_UUID, request);
@@ -60,8 +61,8 @@ class TransferServiceTest {
         Account updatedSender = accountRepository.findByAccountNumber("1111").orElseThrow();
         Account updatedReceiver = accountRepository.findByAccountNumber("2222").orElseThrow();
 
-        assertThat(updatedSender.getBalance()).isEqualTo(7000L); // 10000 - 3000
-        assertThat(updatedReceiver.getBalance()).isEqualTo(3000L); // 0 + 3000
+        assertThat(updatedSender.getBalance()).isEqualTo(BigDecimal.valueOf(7000)); // 10000 - 3000
+        assertThat(updatedReceiver.getBalance()).isEqualTo(BigDecimal.valueOf(3000)); // 0 + 3000
     }
 
     @Test
@@ -69,7 +70,7 @@ class TransferServiceTest {
     void transfer_idempotency_test() {
         // given
         String txId = "UNIQUE-TX-ID-123";
-        TransferRequest request = new TransferRequest("2222", 1000L, txId);
+        TransferRequest request = new TransferRequest("2222", BigDecimal.valueOf(1000), txId);
 
         // when
         transferService.transfer(SENDER_UUID, request);
@@ -77,7 +78,7 @@ class TransferServiceTest {
 
         // then
         Account sender = accountRepository.findByAccountNumber("1111").orElseThrow();
-        assertThat(sender.getBalance()).isEqualTo(9000L); // 10000 - 1000
+        assertThat(sender.getBalance()).isEqualTo(BigDecimal.valueOf(9000)); // 10000 - 1000
 
         assertThat(transferRepository.count()).isEqualTo(1L);
     }

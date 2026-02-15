@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -43,13 +44,13 @@ class TransferDeadlockTest {
         accountRepository.saveAndFlush(Account.builder()
                 .userUuid(USER_A_UUID)
                 .accountNumber("1111")
-                .balance(10000L)
+                .balance(BigDecimal.valueOf(10000))
                 .build());
 
         accountRepository.saveAndFlush(Account.builder()
                 .userUuid(USER_B_UUID)
                 .accountNumber("2222")
-                .balance(10000L)
+                .balance(BigDecimal.valueOf(10000))
                 .build());
     }
 
@@ -65,7 +66,7 @@ class TransferDeadlockTest {
         executorService.submit(() -> {
             try {
                 transferService.transfer(USER_A_UUID,
-                        new TransferRequest("2222", 3000L, UUID.randomUUID().toString()));
+                        new TransferRequest("2222", BigDecimal.valueOf(3000), UUID.randomUUID().toString()));
             } catch (Exception e) {
                 System.err.println("Thread 1 Error: " + e.getMessage());
             } finally {
@@ -77,7 +78,7 @@ class TransferDeadlockTest {
         executorService.submit(() -> {
             try {
                 transferService.transfer(USER_B_UUID,
-                        new TransferRequest("1111", 2000L, UUID.randomUUID().toString()));
+                        new TransferRequest("1111", BigDecimal.valueOf(2000), UUID.randomUUID().toString()));
             } catch (Exception e) {
                 System.err.println("Thread 2 Error: " + e.getMessage());
             } finally {
@@ -95,8 +96,8 @@ class TransferDeadlockTest {
         Account accountA = accountRepository.findByAccountNumber("1111").orElseThrow();
         Account accountB = accountRepository.findByAccountNumber("2222").orElseThrow();
 
-        assertThat(accountA.getBalance()).isEqualTo(9000L);
-        assertThat(accountB.getBalance()).isEqualTo(11000L);
+        assertThat(accountA.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(9000));
+        assertThat(accountB.getBalance()).isEqualByComparingTo(BigDecimal.valueOf(11000));
     }
 
     @AfterEach

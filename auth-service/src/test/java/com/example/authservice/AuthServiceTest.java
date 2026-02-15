@@ -97,6 +97,6 @@ class AuthServiceTest {
         // when & then
         assertThatThrownBy(() -> authService.login(request))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Invalid password.");
+                .hasMessage("Email or Password Invalid.");
     }
 }
