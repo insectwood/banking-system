@@ -34,6 +34,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**", "/auth/**", "/error").permitAll() // Permit all login-related APIs.
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll() // Permit also swagger-related.
+                        .requestMatchers("/actuator/**").permitAll() // Permit actuator (Prometheus)
                         .anyRequest().authenticated()
                 );
         return http.build();

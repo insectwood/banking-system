@@ -1,0 +1,20 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # Core Banking Service
+  - job_name: 'core-banking'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['core-banking:8080']
+        labels:
+          service: 'core-banking'
+
+  # Auth Service
+  - job_name: 'auth-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['auth-service:8081']
+        labels:
+          service: 'auth-service'

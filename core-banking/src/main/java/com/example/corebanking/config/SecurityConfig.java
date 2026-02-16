@@ -1,5 +1,6 @@
 package com.example.corebanking.config;
 
+import com.example.corebanking.common.security.JwtAuthenticationEntryPoint;
 import com.example.corebanking.common.security.JwtAuthenticationFilter;
 import com.example.corebanking.global.security.JwtProvider;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtProvider jwtProvider;
+    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -32,13 +34,17 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint) // 401 JSON Response
+                )
                 .authorizeHttpRequests(auth -> auth
                         // Allow CORS preflight request
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // allow Actuator health check
                         .requestMatchers("/actuator/health").permitAll()
                         // Allow Swagger UI
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/actuator/**").permitAll() // Permit actuator (Prometheus)
                         //.requestMatchers("/api/v1/banking/**", "banking/**").permitAll()
                         // Any other Banking APi is required with JWT Authentication
                         .anyRequest().authenticated()
