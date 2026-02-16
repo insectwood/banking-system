@@ -2,7 +2,7 @@ name: CI Pipeline
 
 on:
   pull_request:
-    branches: [ main, develop, master ]
+    branches: [ main, master, develop ]
   push:
     branches: [ develop ]
 
@@ -13,6 +13,20 @@ jobs:
   auth-service-test:
     name: Auth Service - Test
     runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: auth_db
+        ports:
+          - 3307:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
 
     steps:
       - uses: actions/checkout@v4
@@ -28,6 +42,10 @@ jobs:
 
       - name: Build & Test
         working-directory: ./auth-service
+        env:
+          SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3307/auth_db
+          SPRING_DATASOURCE_USERNAME: root
+          SPRING_DATASOURCE_PASSWORD: password
         run: ./gradlew test jacocoTestReport
 
       - name: Upload JaCoCo Report
