@@ -131,3 +131,60 @@ jobs:
       - name: Build
         working-directory: ./banking-frontend
         run: npm run build
+
+  # ──────────────────────────────────────
+  # SonarQube - Code Quality Analysis
+  # ──────────────────────────────────────
+  sonarqube-analysis:
+    name: SonarQube Analysis
+    runs-on: ubuntu-latest
+    needs: [ auth-service-test, core-banking-test ]
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: core_banking
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # SonarQube needs full history
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Core Banking - Build & Analyze
+        working-directory: ./core-banking
+        env:
+          SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/core_banking
+          SPRING_DATASOURCE_USERNAME: root
+          SPRING_DATASOURCE_PASSWORD: password
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          chmod +x ./gradlew
+          ./gradlew test jacocoTestReport sonar
+
+      - name: Auth Service - Build & Analyze
+        working-directory: ./auth-service
+        env:
+          SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/core_banking
+          SPRING_DATASOURCE_USERNAME: root
+          SPRING_DATASOURCE_PASSWORD: password
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          chmod +x ./gradlew
+          ./gradlew test jacocoTestReport sonar
