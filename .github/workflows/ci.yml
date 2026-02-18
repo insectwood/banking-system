@@ -158,4 +158,4 @@ jobs:
         with:
           args: >
             -Dsonar.host.url=https://sonarcloud.io
-            -Dsonar.organization=insectwood
+            -Dsonar.organization=banking-system-key
