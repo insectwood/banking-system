@@ -160,28 +160,28 @@ services:
   # ──────────────────────────────────────
   # SonarQube - Code quality & Security analyze
   # ──────────────────────────────────────
-  sonarqube:
-    image: sonarqube:lts-community
-    container_name: banking-system-sonarqube
-    restart: unless-stopped
-    ports:
-      - "9000:9000"
-    environment:
-      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
-    volumes:
-      - sonarqube-data:/opt/sonarqube/data
-      - sonarqube-extensions:/opt/sonarqube/extensions
-      - sonarqube-logs:/opt/sonarqube/logs
-    networks:
-      - banking-network
+#  sonarqube:
+#    image: sonarqube:lts-community
+#    container_name: banking-system-sonarqube
+#    restart: unless-stopped
+#    ports:
+#      - "9000:9000"
+#    environment:
+#      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+#    volumes:
+#      - sonarqube-data:/opt/sonarqube/data
+#      - sonarqube-extensions:/opt/sonarqube/extensions
+#      - sonarqube-logs:/opt/sonarqube/logs
+#    networks:
+#      - banking-network
 
 volumes:
   mysql-data:
   prometheus-data:
   grafana-data:
-  sonarqube-data:
-  sonarqube-extensions:
-  sonarqube-logs:
+#  sonarqube-data:
+#  sonarqube-extensions:
+#  sonarqube-logs:
 
 networks:
   banking-network:

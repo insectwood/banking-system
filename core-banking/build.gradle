@@ -3,7 +3,7 @@ plugins {
     id 'org.springframework.boot' version '3.4.2'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'jacoco'
-    id 'org.sonarqube' version '6.0.1.5171'
+    //id 'org.sonarqube' version '6.0.1.5171'
 }
 
 group = 'com.example'
@@ -85,14 +85,14 @@ jacocoTestCoverageVerification {
 }
 
 // SonarQube
-sonar {
-    properties {
-        property "sonar.projectKey", "Core-Banking-Api"
-        property "sonar.projectName", "Core Banking Api"
-        property "sonar.host.url", System.getenv("SONAR_HOST_URL") ?: "http://localhost:9000"
-        property "sonar.token", System.getenv("SONAR_TOKEN") ?: "squ_49af151f3665c8f5b3ca80325d2b3c45dafb2294"
-        property "sonar.java.coveragePlugin", "jacoco"
-        property "sonar.coverage.jacoco.xmlReportPaths", "${buildDir}/reports/jacoco/test/jacocoTestReport.xml"
-        property "sonar.java.binaries", "${buildDir}/classes"
-    }
-}
+//sonar {
+//    properties {
+//        property "sonar.projectKey", "Core-Banking-Api"
+//        property "sonar.projectName", "Core Banking Api"
+//        property "sonar.host.url", System.getenv("SONAR_HOST_URL") ?: "http://localhost:9000"
+//        property "sonar.token", System.getenv("SONAR_TOKEN") ?: "squ_49af151f3665c8f5b3ca80325d2b3c45dafb2294"
+//        property "sonar.java.coveragePlugin", "jacoco"
+//        property "sonar.coverage.jacoco.xmlReportPaths", "${buildDir}/reports/jacoco/test/jacocoTestReport.xml"
+//        property "sonar.java.binaries", "${buildDir}/classes"
+//    }
+//}
