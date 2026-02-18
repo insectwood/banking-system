@@ -151,6 +151,18 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
+      - name: Build Core Banking
+        working-directory: ./core-banking
+        run: |
+          chmod +x ./gradlew
+          ./gradlew classes -x test
+
+      - name: Build Auth Service
+        working-directory: ./auth-service
+        run: |
+          chmod +x ./gradlew
+          ./gradlew classes -x test
+
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v5
         env:
