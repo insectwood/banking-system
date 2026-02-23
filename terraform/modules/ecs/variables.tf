@@ -1,0 +1,11 @@
+variable "project_name" { type = string }
+variable "environment" { type = string }
+variable "aws_region" { type = string }
+variable "private_subnet_ids" { type = list(string) }
+variable "ecs_security_group_id" { type = string }
+variable "alb_target_group_arn" { type = string }
+variable "ecr_repository_urls" { type = map(string) }
+variable "db_endpoint" { type = string }
+variable "db_username" { type = string }
+variable "db_password" { type = string }
+variable "jwt_secret" { type = string }
