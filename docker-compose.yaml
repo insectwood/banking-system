@@ -90,6 +90,7 @@ services:
       SPRING_CLOUD_GATEWAY_ROUTES_1_PREDICATES_0: Path=/api/v1/auth/**
       SPRING_CLOUD_GATEWAY_ROUTES_1_FILTERS_0: StripPrefix=2
       SPRING_CLOUD_GATEWAY_ROUTES_1_FILTERS_1: DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_FIRST
+      JWT_SECRET: c2lsdmVybmluZS10ZWNoLXNwcmluZy1ib290LWp3dC10dXRvcmlhbC1zZWNyZXQtc2lsdmVybmluZS10ZWNoLXNwcmluZy1ib290LWp3dC10dXRvcmlhbC1zZWNyZXQK
     depends_on:
       - core-banking
       - auth-service

@@ -7,7 +7,7 @@ spring:
   cloud:
     gateway:
       routes:
-        # Auth Service
+        # Auth Service (Authentication not required)
         - id: auth-service
           uri: http://localhost:8081
           predicates:
@@ -16,7 +16,7 @@ spring:
             - StripPrefix=2
             - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_FIRST
 
-        # Core Banking Service
+        # Core Banking Service (Attach X-User-UUID header)
         - id: core-banking
           uri: http://localhost:8080
           predicates:
@@ -42,3 +42,6 @@ spring:
               - "*"
             allowCredentials: true
             maxAge: 3600
+
+jwt:
+  secret: ${JWT_SECRET:c2lsdmVybmluZS10ZWNoLXNwcmluZy1ib290LWp3dC10dXRvcmlhbC1zZWNyZXQtc2lsdmVybmluZS10ZWNoLXNwcmluZy1ib290LWp3dC10dXRvcmlhbC1zZWNyZXQK}

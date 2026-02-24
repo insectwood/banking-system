@@ -1,5 +1,6 @@
 package com.example.corebanking.config;
 
+import com.example.corebanking.common.security.GatewayAuthenticationFilter;
 import com.example.corebanking.common.security.JwtAuthenticationEntryPoint;
 import com.example.corebanking.common.security.JwtAuthenticationFilter;
 import com.example.corebanking.global.security.JwtProvider;
@@ -49,7 +50,8 @@ public class SecurityConfig {
                         // Any other Banking APi is required with JWT Authentication
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(new JwtAuthenticationFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class);
+                //.addFilterBefore(new JwtAuthenticationFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new GatewayAuthenticationFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
