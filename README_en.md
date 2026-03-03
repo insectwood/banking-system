@@ -1,13 +1,68 @@
-# Banking System (MSA-based Banking System)
+# MSA-based Banking System
 
 > A banking system (e.g., account transfers) built on Spring Boot and Microservices Architecture (MSA).
 > Designed and implemented the entire system lifecycle, from ensuring transaction consistency to infrastructure provisioning via Terraform, CI/CD pipeline automation, and real-time monitoring.
 
 <br/>
 
-## Architecture
-![Architecture Diagram](./docs/architecture.png)
-
+##  Architecture & System Configuration
+```
+[User Browsser]
+   │
+   ├──> (:5173) [ Frontend (React) ]
+   │                 │
+   ├──> (:8000) [ API Gateway (JWT Authentication / Routing) ]
+   │                 ├──> Auth Service (:8081) ──> [ MySQL ]
+   │                 ├──> Core Banking (:8080) ──> [ MySQL ]
+   │                 ├──> Other APIs     
+   │                 └──> . . .         
+   │                     
+   │
+   └──> (:3000) [ Grafana ] ◄── [ Prometheus ]
+```
+CI
+```
+PR Creation
+│
+├── API 1 Test + JaCoCo Coverage
+├── API 2 Test + JaCoCo Coverage
+├── . . .
+├── frontend Build
+│
+└── SonarCloudAnalysis
+    → Automated Code Quailty Reporting on PR
+```
+CD
+ ```text
+  main / Merge 
+    │
+    ▼
+[Test]  Execute full test
+    │
+    ▼
+[Build]   Build Docker image
+    │
+    ▼
+[Push]   Push image to AWS ECR
+    │
+    ▼
+[Deploy]   Rolling deployment to AWS ECS (Start new container → Health check → Terminate old container)
+    │
+    ▼
+[Frontend] npm build → Upload to AWS S3 → Invalidate CloudFront cache
+ ```
+AWS
+```
+Internet → CloudFront → ALB
+                          │
+                          ├─────────────────
+                          ├──> api-gateway   │
+                          ├──> auth-service  │ ──> RDS MySQL
+                          ├──> core-banking  │ ──> RDS MySQL
+                          └──> Other APIs    │
+                          └──────────────────
+                                    └───>ECS Fargate
+```
 <br/>
 
 ## Tech Stack
@@ -36,7 +91,7 @@
 
 <br/>
 
-## 💡 Key Features & Implementation Details
+## 💡 Key Technologies & Implementation
 
 ### 1. Financial Transaction Consistency & Concurrency Control (Core Banking)
 - **Concurrency Control:** Utilized `PESSIMISTIC_WRITE` (Pessimistic Lock) to prevent lost updates during simultaneous withdrawal requests, ensuring sequential and safe processing.
@@ -55,3 +110,4 @@
 
 ### 5. Real-time Monitoring
 - **Dashboard Setup:** Integrated Prometheus and Grafana to track core system metrics in real-time, including error detection, API latency, and JVM memory usage.
+
