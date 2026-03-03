@@ -91,7 +91,7 @@ Internet → CloudFront → ALB
 
 <br/>
 
-## 💡 Key Technologies & Implementation
+## Key Technologies & Implementation
 
 ### 1. Financial Transaction Consistency & Concurrency Control (Core Banking)
 - **Concurrency Control:** Utilized `PESSIMISTIC_WRITE` (Pessimistic Lock) to prevent lost updates during simultaneous withdrawal requests, ensuring sequential and safe processing.
@@ -110,4 +110,5 @@ Internet → CloudFront → ALB
 
 ### 5. Real-time Monitoring
 - **Dashboard Setup:** Integrated Prometheus and Grafana to track core system metrics in real-time, including error detection, API latency, and JVM memory usage.
+
 
